@@ -6,6 +6,8 @@ class Learning {
         this.categories = [];
         this.searchQuery = '';
         this.selectedCategory = 'all';
+        this.learningPath = this.loadLearningPathData();
+        this.expandedRows = new Set();
     }
 
     render() {
@@ -34,6 +36,15 @@ class Learning {
                 <!-- Search and Filters -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     ${this.renderSearchAndFilters()}
+                </div>
+
+                <!-- Learning Path -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <i data-feather="map" class="w-5 h-5 mr-2"></i>
+                        Your Learning Path
+                    </h3>
+                    ${this.renderLearningPath()}
                 </div>
 
                 <!-- Continue Learning Section -->
@@ -469,6 +480,321 @@ class Learning {
     loadLearningData() {
         // Load courses and user's learning progress
         // In a real application, this would fetch from an API
+    }
+
+    loadLearningPathData() {
+        // Mock JSON data for learning path modules
+        return [
+            {
+                id: 1,
+                moduleName: "JavaScript Fundamentals",
+                estimatedTime: "8 hours",
+                completionStatus: "completed",
+                description: "Master the building blocks of JavaScript including variables, functions, and control structures.",
+                aiRationale: "Because your initial assessment showed strong logical thinking but limited JavaScript syntax knowledge.",
+                prerequisites: [],
+                completedDate: "2024-08-01"
+            },
+            {
+                id: 2,
+                moduleName: "DOM Manipulation",
+                estimatedTime: "6 hours",
+                completionStatus: "completed",
+                description: "Learn to interact with web pages dynamically using JavaScript DOM methods.",
+                aiRationale: "Essential foundation before moving to React, based on your frontend development goals.",
+                prerequisites: ["JavaScript Fundamentals"],
+                completedDate: "2024-08-03"
+            },
+            {
+                id: 3,
+                moduleName: "React Basics",
+                estimatedTime: "12 hours",
+                completionStatus: "in-progress",
+                description: "Build interactive user interfaces with React components, props, and state management.",
+                aiRationale: "Because your React assessment score was 50% and this is crucial for your career goals.",
+                prerequisites: ["JavaScript Fundamentals", "DOM Manipulation"],
+                progress: 65
+            },
+            {
+                id: 4,
+                moduleName: "State Management",
+                estimatedTime: "10 hours",
+                completionStatus: "locked",
+                description: "Advanced state management patterns using Context API and Redux for complex applications.",
+                aiRationale: "Your project portfolio will greatly benefit from understanding professional state management.",
+                prerequisites: ["React Basics"]
+            },
+            {
+                id: 5,
+                moduleName: "Testing & Debugging",
+                estimatedTime: "8 hours",
+                completionStatus: "locked",
+                description: "Write robust tests and debug React applications effectively using modern testing frameworks.",
+                aiRationale: "Critical skill gap identified in your assessment - employers highly value testing skills.",
+                prerequisites: ["React Basics"]
+            },
+            {
+                id: 6,
+                moduleName: "Backend Integration",
+                estimatedTime: "15 hours",
+                completionStatus: "locked",
+                description: "Connect your React applications to APIs and handle asynchronous data operations.",
+                aiRationale: "Based on your goal to become a full-stack developer, this bridges frontend and backend skills.",
+                prerequisites: ["React Basics", "State Management"]
+            }
+        ];
+    }
+
+    renderLearningPath() {
+        return `
+            <div class="learning-path-container">
+                <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-lg font-medium text-blue-900">Personalized Learning Journey</h4>
+                            <p class="text-sm text-blue-700">AI-curated path based on your assessment and goals</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-blue-900">${this.calculateOverallProgress()}%</div>
+                            <div class="text-sm text-blue-700">Overall Progress</div>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="w-full bg-blue-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" style="width: ${this.calculateOverallProgress()}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 learning-path-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Module Name
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Estimated Time
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Completion Status
+                                </th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Actions
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            ${this.learningPath.map(module => this.renderModuleRow(module)).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    renderModuleRow(module) {
+        const isExpanded = this.expandedRows.has(module.id);
+        const statusClass = this.getStatusClass(module.completionStatus);
+        const canStart = this.canStartModule(module);
+        
+        return `
+            <tr class="${statusClass.rowClass} hover:bg-gray-50 transition-colors cursor-pointer" 
+                onclick="app.modules.learning.toggleModuleExpansion(${module.id})">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 h-8 w-8">
+                            <div class="h-8 w-8 rounded-full ${statusClass.iconBg} flex items-center justify-center">
+                                <i data-feather="${statusClass.icon}" class="h-4 w-4 ${statusClass.iconColor}"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <div class="text-sm font-medium text-gray-900">${module.moduleName}</div>
+                            ${module.prerequisites.length > 0 ? `
+                                <div class="text-xs text-gray-500">Requires: ${module.prerequisites.join(', ')}</div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${module.estimatedTime}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass.badgeClass}">
+                        ${this.formatStatus(module.completionStatus)}
+                    </span>
+                    ${module.completionStatus === 'in-progress' ? `
+                        <div class="mt-1">
+                            <div class="w-24 bg-gray-200 rounded-full h-1.5">
+                                <div class="bg-blue-600 h-1.5 rounded-full" style="width: ${module.progress}%"></div>
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">${module.progress}% complete</div>
+                        </div>
+                    ` : ''}
+                    ${module.completedDate ? `
+                        <div class="text-xs text-gray-500 mt-1">Completed: ${App.formatDate(module.completedDate)}</div>
+                    ` : ''}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button class="text-gray-400 hover:text-gray-600 transition-colors" 
+                            onclick="event.stopPropagation(); app.modules.learning.toggleModuleExpansion(${module.id})">
+                        <i data-feather="${isExpanded ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4"></i>
+                    </button>
+                </td>
+            </tr>
+            ${isExpanded ? this.renderExpandedContent(module, canStart) : ''}
+        `;
+    }
+
+    renderExpandedContent(module, canStart) {
+        return `
+            <tr class="bg-gray-50">
+                <td colspan="4" class="px-6 py-4">
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Description</h4>
+                            <p class="text-sm text-gray-700">${module.description}</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">AI Recommendation</h4>
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                <div class="flex items-start">
+                                    <i data-feather="brain" class="h-4 w-4 text-blue-500 mt-0.5 mr-2 flex-shrink-0"></i>
+                                    <p class="text-sm text-blue-800">${module.aiRationale}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            ${canStart ? `
+                                <button onclick="event.stopPropagation(); app.modules.learning.startModule(${module.id})" 
+                                        class="btn-primary text-sm px-4 py-2">
+                                    <i data-feather="play" class="h-4 w-4 mr-1 inline"></i>
+                                    ${module.completionStatus === 'in-progress' ? 'Continue Learning' : 'Start Learning'}
+                                </button>
+                            ` : `
+                                <button disabled class="btn-secondary opacity-50 cursor-not-allowed text-sm px-4 py-2">
+                                    <i data-feather="lock" class="h-4 w-4 mr-1 inline"></i>
+                                    Locked
+                                </button>
+                            `}
+                            
+                            ${module.completionStatus === 'completed' ? `
+                                <button onclick="event.stopPropagation(); app.modules.learning.reviewModule(${module.id})" 
+                                        class="btn-secondary text-sm px-4 py-2">
+                                    <i data-feather="refresh-cw" class="h-4 w-4 mr-1 inline"></i>
+                                    Review
+                                </button>
+                            ` : ''}
+                            
+                            <button onclick="event.stopPropagation(); app.modules.learning.bookmarkModule(${module.id})" 
+                                    class="text-gray-600 hover:text-gray-800 text-sm">
+                                <i data-feather="bookmark" class="h-4 w-4 mr-1 inline"></i>
+                                Bookmark
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    getStatusClass(status) {
+        const classes = {
+            'completed': {
+                rowClass: 'bg-green-50',
+                iconBg: 'bg-green-100',
+                iconColor: 'text-green-600',
+                icon: 'check-circle',
+                badgeClass: 'bg-green-100 text-green-800'
+            },
+            'in-progress': {
+                rowClass: '',
+                iconBg: 'bg-blue-100',
+                iconColor: 'text-blue-600',
+                icon: 'clock',
+                badgeClass: 'bg-blue-100 text-blue-800'
+            },
+            'locked': {
+                rowClass: 'opacity-60',
+                iconBg: 'bg-gray-100',
+                iconColor: 'text-gray-400',
+                icon: 'lock',
+                badgeClass: 'bg-gray-100 text-gray-800'
+            }
+        };
+        return classes[status] || classes['locked'];
+    }
+
+    formatStatus(status) {
+        const formats = {
+            'completed': 'Completed',
+            'in-progress': 'In Progress',
+            'locked': 'Locked'
+        };
+        return formats[status] || 'Unknown';
+    }
+
+    canStartModule(module) {
+        if (module.completionStatus === 'completed') return true;
+        if (module.completionStatus === 'in-progress') return true;
+        
+        // Check if all prerequisites are completed
+        return module.prerequisites.every(prereq => {
+            const prereqModule = this.learningPath.find(m => m.moduleName === prereq);
+            return prereqModule && prereqModule.completionStatus === 'completed';
+        });
+    }
+
+    calculateOverallProgress() {
+        const totalModules = this.learningPath.length;
+        const completedModules = this.learningPath.filter(m => m.completionStatus === 'completed').length;
+        const inProgressModules = this.learningPath.filter(m => m.completionStatus === 'in-progress');
+        
+        let progressPoints = completedModules * 100;
+        inProgressModules.forEach(module => {
+            progressPoints += (module.progress || 0);
+        });
+        
+        return Math.round(progressPoints / totalModules);
+    }
+
+    toggleModuleExpansion(moduleId) {
+        if (this.expandedRows.has(moduleId)) {
+            this.expandedRows.delete(moduleId);
+        } else {
+            this.expandedRows.add(moduleId);
+        }
+        
+        // Re-render the learning path section
+        const container = document.querySelector('.learning-path-container');
+        if (container) {
+            container.innerHTML = this.renderLearningPath().match(/<div class="learning-path-container"[\s\S]*<\/div>$/)[0].replace('<div class="learning-path-container">', '').replace(/<\/div>$/, '');
+            feather.replace();
+        }
+    }
+
+    startModule(moduleId) {
+        const module = this.learningPath.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`Starting "${module.moduleName}". Opening learning content...`, 'success');
+            // In a real app, this would navigate to the module content
+        }
+    }
+
+    reviewModule(moduleId) {
+        const module = this.learningPath.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`Opening review for "${module.moduleName}"...`, 'info');
+        }
+    }
+
+    bookmarkModule(moduleId) {
+        const module = this.learningPath.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`"${module.moduleName}" added to bookmarks!`, 'success');
+        }
     }
 }
 
