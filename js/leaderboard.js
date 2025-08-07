@@ -12,6 +12,9 @@ class Leaderboard {
             allTime: []
         };
         this.userRank = null;
+        this.badges = [];
+        this.userBadges = [];
+        this.loadBadgeData();
     }
 
     render() {
@@ -61,10 +64,16 @@ class Leaderboard {
                     </div>
                 </div>
 
-                <!-- Achievement Badges -->
+                <!-- Top 5 Users Section -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h3 class="text-xl font-semibold text-gray-900 mb-4">Top Achievers This Month</h3>
-                    ${this.renderTopAchievers()}
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">🏆 Top 5 Users This Month</h3>
+                    ${this.renderTop5Users()}
+                </div>
+
+                <!-- Badge Collection -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4">🏅 Your Badge Collection</h3>
+                    ${this.renderUserBadges()}
                 </div>
 
                 <!-- Leaderboard Stats -->
@@ -516,6 +525,7 @@ class Leaderboard {
         feather.replace();
         this.setupTimeframeFilter();
         this.loadLeaderboardData();
+        this.loadBadgeData();
     }
 
     setupTimeframeFilter() {
@@ -532,6 +542,199 @@ class Leaderboard {
     loadLeaderboardData() {
         // Load leaderboard data based on current view and timeframe
         // In a real application, this would fetch from an API
+    }
+
+    async loadBadgeData() {
+        try {
+            const response = await fetch('data/badges.json');
+            const data = await response.json();
+            this.badges = data.badges;
+            this.userBadges = data.userBadges;
+        } catch (error) {
+            console.error('Failed to load badge data:', error);
+            // Fallback to mock data
+            this.badges = [
+                { id: 'quick-learner', name: 'Quick Learner', description: 'Completed 10 courses in under 30 days', icon: 'zap', color: 'yellow', earnedOn: '2024-07-22T14:45:00Z' },
+                { id: 'team-player', name: 'Team Player', description: 'Participated in 5+ team hackathons', icon: 'users', color: 'blue', earnedOn: '2024-07-28T09:15:00Z' },
+                { id: 'code-master', name: 'Code Master', description: 'Achieved 95%+ average score', icon: 'code', color: 'green', earnedOn: '2024-08-01T16:20:00Z' },
+                { id: 'streak-warrior', name: 'Streak Warrior', description: 'Maintained 30+ day learning streak', icon: 'fire', color: 'orange', earnedOn: '2024-07-18T08:00:00Z' },
+                { id: 'mentor', name: 'Mentor', description: 'Helped 20+ fellow learners', icon: 'heart', color: 'pink', earnedOn: '2024-07-25T13:45:00Z' }
+            ];
+            this.userBadges = ['quick-learner', 'team-player', 'code-master', 'streak-warrior', 'mentor'];
+        }
+    }
+
+    renderTop5Users() {
+        const topUsers = [
+            { rank: 1, name: 'Sarah Chen', points: 4850, avatar: 'SC', change: 'same' },
+            { rank: 2, name: 'Mike Rodriguez', points: 4720, avatar: 'MR', change: 'up' },
+            { rank: 3, name: 'Emily Watson', points: 4680, avatar: 'EW', change: 'down' },
+            { rank: 4, name: 'David Kim', points: 4520, avatar: 'DK', change: 'up' },
+            { rank: 5, name: 'Alex Thompson', points: 4350, avatar: 'AT', change: 'same' }
+        ];
+
+        return `
+            <div class="space-y-4">
+                ${topUsers.map((user, index) => `
+                    <div class="flex items-center justify-between p-4 ${index < 3 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200' : 'bg-gray-50 border border-gray-200'} rounded-lg">
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                    ${user.avatar}
+                                </div>
+                                <div class="absolute -top-1 -right-1 w-6 h-6 ${index < 3 ? 'bg-yellow-500' : 'bg-gray-500'} rounded-full flex items-center justify-center">
+                                    <span class="text-white text-xs font-bold">${user.rank}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-gray-900">${user.name}</h4>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-sm text-gray-600">${user.points.toLocaleString()} points</span>
+                                    ${this.getRankChangeIcon(user.change)}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            ${index < 3 ? `
+                                <div class="flex items-center space-x-1">
+                                    <i data-feather="trophy" class="w-5 h-5 text-yellow-600"></i>
+                                    <span class="text-sm font-medium text-yellow-700">${index === 0 ? 'Gold' : index === 1 ? 'Silver' : 'Bronze'}</span>
+                                </div>
+                            ` : `
+                                <span class="text-sm text-gray-500">Top 5</span>
+                            `}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderUserBadges() {
+        const earnedBadges = this.badges.filter(badge => this.userBadges.includes(badge.id));
+        const lockedBadges = this.badges.filter(badge => !this.userBadges.includes(badge.id)).slice(0, 3);
+
+        return `
+            <div class="space-y-6">
+                <!-- Earned Badges -->
+                <div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Earned Badges (${earnedBadges.length})</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                        ${earnedBadges.map(badge => `
+                            <div class="badge-card relative group cursor-pointer" 
+                                 onmouseenter="app.modules.leaderboard.showBadgeTooltip(event, '${badge.id}')" 
+                                 onmouseleave="app.modules.leaderboard.hideBadgeTooltip()">
+                                <div class="text-center p-4 border-2 border-${badge.color}-300 bg-${badge.color}-50 rounded-lg hover:shadow-md transition-all">
+                                    <div class="w-12 h-12 bg-${badge.color}-100 rounded-full flex items-center justify-center mx-auto mb-2 group-hover:scale-110 transition-transform">
+                                        <i data-feather="${badge.icon}" class="w-6 h-6 text-${badge.color}-600"></i>
+                                    </div>
+                                    <h5 class="font-medium text-gray-900 text-sm mb-1">${badge.name}</h5>
+                                    <p class="text-xs text-gray-600 leading-tight">${badge.description}</p>
+                                    <div class="mt-2 text-xs text-${badge.color}-600 font-medium">
+                                        Earned ${this.formatEarnedDate(badge.earnedOn)}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <!-- Locked Badges Preview -->
+                <div>
+                    <h4 class="text-lg font-medium text-gray-900 mb-4">Badges to Earn</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        ${lockedBadges.map(badge => `
+                            <div class="badge-card relative group cursor-pointer opacity-60"
+                                 onmouseenter="app.modules.leaderboard.showBadgeTooltip(event, '${badge.id}', true)" 
+                                 onmouseleave="app.modules.leaderboard.hideBadgeTooltip()">
+                                <div class="text-center p-4 border-2 border-gray-300 bg-gray-50 rounded-lg hover:shadow-md transition-all">
+                                    <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-2">
+                                        <i data-feather="${badge.icon}" class="w-6 h-6 text-gray-400"></i>
+                                    </div>
+                                    <h5 class="font-medium text-gray-600 text-sm mb-1">${badge.name}</h5>
+                                    <p class="text-xs text-gray-500 leading-tight">${badge.description}</p>
+                                    <div class="mt-2 text-xs text-gray-500 font-medium">
+                                        <i data-feather="lock" class="w-3 h-3 inline mr-1"></i>
+                                        Locked
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Badge Tooltip -->
+            <div id="badge-tooltip" class="absolute z-50 hidden bg-gray-900 text-white p-3 rounded-lg shadow-lg max-w-xs">
+                <div id="tooltip-content"></div>
+                <div class="absolute bottom-0 left-1/2 transform translate-y-full -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            </div>
+        `;
+    }
+
+    showBadgeTooltip(event, badgeId, isLocked = false) {
+        const badge = this.badges.find(b => b.id === badgeId);
+        if (!badge) return;
+
+        const tooltip = document.getElementById('badge-tooltip');
+        const content = document.getElementById('tooltip-content');
+        
+        if (!tooltip || !content) return;
+
+        const earnedDate = isLocked ? null : badge.earnedOn;
+        
+        content.innerHTML = `
+            <div class="space-y-2">
+                <div class="flex items-center space-x-2">
+                    <i data-feather="${badge.icon}" class="w-4 h-4"></i>
+                    <span class="font-semibold">${badge.name}</span>
+                </div>
+                <p class="text-sm text-gray-300">${badge.description}</p>
+                ${earnedDate ? `
+                    <div class="text-xs text-gray-400 pt-1 border-t border-gray-700">
+                        Earned on ${this.formatEarnedDate(earnedDate)}
+                    </div>
+                ` : `
+                    <div class="text-xs text-gray-400 pt-1 border-t border-gray-700">
+                        🔒 Complete the requirements to unlock this badge
+                    </div>
+                `}
+            </div>
+        `;
+
+        // Position tooltip
+        const rect = event.currentTarget.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + rect.width / 2}px`;
+        tooltip.style.top = `${rect.top - 10}px`;
+        tooltip.style.transform = 'translate(-50%, -100%)';
+        
+        tooltip.classList.remove('hidden');
+        feather.replace();
+    }
+
+    hideBadgeTooltip() {
+        const tooltip = document.getElementById('badge-tooltip');
+        if (tooltip) {
+            tooltip.classList.add('hidden');
+        }
+    }
+
+    formatEarnedDate(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = now - date;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return 'today';
+        if (diffDays === 1) return 'yesterday';
+        if (diffDays < 7) return `${diffDays} days ago`;
+        if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+        
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
     }
 }
 

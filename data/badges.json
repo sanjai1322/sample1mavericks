@@ -1,0 +1,83 @@
+{
+  "badges": [
+    {
+      "id": "bug-basher",
+      "name": "Bug Basher",
+      "description": "Found and fixed 50+ bugs",
+      "icon": "bug",
+      "color": "red",
+      "earnedOn": "2024-07-15T10:30:00Z",
+      "category": "debugging"
+    },
+    {
+      "id": "quick-learner",
+      "name": "Quick Learner",
+      "description": "Completed 10 courses in under 30 days",
+      "icon": "zap",
+      "color": "yellow",
+      "earnedOn": "2024-07-22T14:45:00Z",
+      "category": "learning"
+    },
+    {
+      "id": "team-player",
+      "name": "Team Player",
+      "description": "Participated in 5+ team hackathons",
+      "icon": "users",
+      "color": "blue",
+      "earnedOn": "2024-07-28T09:15:00Z",
+      "category": "collaboration"
+    },
+    {
+      "id": "code-master",
+      "name": "Code Master",
+      "description": "Achieved 95%+ average score across all assessments",
+      "icon": "code",
+      "color": "green",
+      "earnedOn": "2024-08-01T16:20:00Z",
+      "category": "excellence"
+    },
+    {
+      "id": "innovation-champion",
+      "name": "Innovation Champion",
+      "description": "Won 3+ hackathons with creative solutions",
+      "icon": "lightbulb",
+      "color": "purple",
+      "earnedOn": "2024-08-05T11:30:00Z",
+      "category": "innovation"
+    },
+    {
+      "id": "streak-warrior",
+      "name": "Streak Warrior",
+      "description": "Maintained 30+ day learning streak",
+      "icon": "fire",
+      "color": "orange",
+      "earnedOn": "2024-07-18T08:00:00Z",
+      "category": "consistency"
+    },
+    {
+      "id": "mentor",
+      "name": "Mentor",
+      "description": "Helped 20+ fellow learners",
+      "icon": "heart",
+      "color": "pink",
+      "earnedOn": "2024-07-25T13:45:00Z",
+      "category": "community"
+    },
+    {
+      "id": "full-stack-hero",
+      "name": "Full Stack Hero",
+      "description": "Mastered both frontend and backend technologies",
+      "icon": "layers",
+      "color": "indigo",
+      "earnedOn": "2024-08-03T15:10:00Z",
+      "category": "technical"
+    }
+  ],
+  "userBadges": [
+    "quick-learner",
+    "team-player", 
+    "code-master",
+    "streak-warrior",
+    "mentor"
+  ]
+}
