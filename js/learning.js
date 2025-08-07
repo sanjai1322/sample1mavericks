@@ -6,7 +6,7 @@ class Learning {
         this.categories = [];
         this.searchQuery = '';
         this.selectedCategory = 'all';
-        this.learningPath = this.loadLearningPathData();
+        this.learningPathData = this.initializeLearningPathData();
         this.expandedRows = new Set();
     }
 
@@ -36,6 +36,16 @@ class Learning {
                 <!-- Search and Filters -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     ${this.renderSearchAndFilters()}
+                </div>
+
+                <!-- Learning Path Table -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <i data-feather="map" class="w-5 h-5 mr-2"></i>
+                        Your Personalized Learning Path
+                    </h3>
+                    <p class="text-gray-600 mb-6">AI-curated modules based on your assessment results and learning goals</p>
+                    ${this.renderLearningPathTable()}
                 </div>
 
                 <!-- Learning Path -->
@@ -482,6 +492,94 @@ class Learning {
         // In a real application, this would fetch from an API
     }
 
+    initializeLearningPathData() {
+        return [
+            {
+                id: 1,
+                moduleName: "JavaScript Fundamentals",
+                estimatedTime: "8 hours",
+                completed: true,
+                description: "Master the core concepts of JavaScript including variables, functions, objects, and control structures.",
+                aiRationale: "Recommended because your JavaScript basics score was 45%. This will strengthen your foundation.",
+                difficulty: "Beginner",
+                prerequisites: [],
+                learningObjectives: ["Variables and data types", "Functions and scope", "DOM manipulation"]
+            },
+            {
+                id: 2,
+                moduleName: "React Components & Props",
+                estimatedTime: "12 hours",
+                completed: false,
+                description: "Learn to build reusable React components and manage data flow with props and state.",
+                aiRationale: "Based on your React score of 30%, this module will help you understand component architecture.",
+                difficulty: "Intermediate",
+                prerequisites: ["JavaScript Fundamentals"],
+                learningObjectives: ["Component creation", "Props and state", "Event handling"]
+            },
+            {
+                id: 3,
+                moduleName: "State Management with Redux",
+                estimatedTime: "15 hours",
+                completed: false,
+                description: "Master centralized state management using Redux for complex React applications.",
+                aiRationale: "Your state management assessment showed gaps. Redux will help you manage complex application state.",
+                difficulty: "Advanced",
+                prerequisites: ["React Components & Props"],
+                learningObjectives: ["Redux store setup", "Actions and reducers", "Middleware integration"]
+            },
+            {
+                id: 4,
+                moduleName: "API Integration & Async Operations",
+                estimatedTime: "10 hours",
+                completed: false,
+                description: "Learn to integrate external APIs and handle asynchronous operations effectively.",
+                aiRationale: "Your async programming score was 25%. This module will improve your API handling skills.",
+                difficulty: "Intermediate",
+                prerequisites: ["JavaScript Fundamentals"],
+                learningObjectives: ["Fetch API", "Promise handling", "Error management"]
+            },
+            {
+                id: 5,
+                moduleName: "Testing React Applications",
+                estimatedTime: "8 hours",
+                completed: false,
+                description: "Write comprehensive tests for React components using Jest and React Testing Library.",
+                aiRationale: "Testing wasn't covered in your assessment. This essential skill will improve code quality.",
+                difficulty: "Intermediate",
+                prerequisites: ["React Components & Props"],
+                learningObjectives: ["Unit testing", "Component testing", "Integration testing"]
+            }
+        ];
+    }
+
+    renderLearningPathTable() {
+        return `
+            <div class="overflow-hidden border border-gray-200 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200 learning-path-table">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Module Name
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Estimated Time
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Completion Status
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Actions
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        ${this.learningPathData.map((module, index) => this.renderTableRow(module, index)).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+
     loadLearningPathData() {
         // Mock JSON data for learning path modules
         return [
@@ -794,6 +892,226 @@ class Learning {
         const module = this.learningPath.find(m => m.id === moduleId);
         if (module) {
             app.showNotification(`"${module.moduleName}" added to bookmarks!`, 'success');
+        }
+    }
+    renderTableRow(module, index) {
+        const isExpanded = this.expandedRows.has(module.id);
+        const isCompleted = module.completed;
+        
+        return `
+            <tr class="hover:bg-gray-50 transition-colors duration-150 ${isCompleted ? 'completed' : ''}" 
+                id="row-${module.id}">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <button onclick="app.modules.learning.toggleExpanded(${module.id})" 
+                                class="mr-3 p-1 hover:bg-gray-100 rounded transition-colors">
+                            <i data-feather="${isExpanded ? 'chevron-down' : 'chevron-right'}" 
+                               class="w-4 h-4 text-gray-500 transition-transform duration-200"></i>
+                        </button>
+                        <div>
+                            <div class="text-sm font-medium ${isCompleted ? 'text-green-800' : 'text-gray-900'}">
+                                ${module.moduleName}
+                            </div>
+                            <div class="text-sm text-gray-500">${module.difficulty}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="text-sm text-gray-900">${module.estimatedTime}</div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        isCompleted 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-yellow-100 text-yellow-800'
+                    }">
+                        <i data-feather="${isCompleted ? 'check-circle' : 'clock'}" 
+                           class="w-3 h-3 mr-1"></i>
+                        ${isCompleted ? 'Completed' : 'Not Started'}
+                    </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    ${isCompleted 
+                        ? `<span class="text-green-600 flex items-center">
+                             <i data-feather="check" class="w-4 h-4 mr-1"></i>
+                             Completed
+                           </span>`
+                        : `<button onclick="app.modules.learning.startModule(${module.id})" 
+                                  class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                             <i data-feather="play" class="w-3 h-3 mr-1"></i>
+                             Start Learning
+                           </button>`
+                    }
+                </td>
+            </tr>
+            ${isExpanded ? this.renderExpandedRow(module) : ''}
+        `;
+    }
+
+    renderExpandedRow(module) {
+        return `
+            <tr class="bg-gray-25 border-t-0" id="expanded-${module.id}">
+                <td colspan="4" class="px-6 py-4">
+                    <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
+                        <!-- Description -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                <i data-feather="info" class="w-4 h-4 mr-2"></i>
+                                Description
+                            </h4>
+                            <p class="text-sm text-gray-700">${module.description}</p>
+                        </div>
+
+                        <!-- AI Rationale -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                <i data-feather="zap" class="w-4 h-4 mr-2 text-purple-500"></i>
+                                AI Recommendation
+                            </h4>
+                            <div class="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                                <p class="text-sm text-purple-700">${module.aiRationale}</p>
+                            </div>
+                        </div>
+
+                        <!-- Learning Objectives -->
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                <i data-feather="target" class="w-4 h-4 mr-2"></i>
+                                Learning Objectives
+                            </h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                ${module.learningObjectives.map(objective => 
+                                    `<li class="flex items-center">
+                                        <i data-feather="chevron-right" class="w-3 h-3 mr-2 text-gray-400"></i>
+                                        ${objective}
+                                    </li>`
+                                ).join('')}
+                            </ul>
+                        </div>
+
+                        <!-- Prerequisites -->
+                        ${module.prerequisites.length > 0 ? `
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+                                    <i data-feather="layers" class="w-4 h-4 mr-2"></i>
+                                    Prerequisites
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    ${module.prerequisites.map(prereq => 
+                                        `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            ${prereq}
+                                        </span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <!-- Action Buttons -->
+                        <div class="flex items-center space-x-3 pt-2 border-t border-gray-200">
+                            ${!module.completed ? `
+                                <button onclick="app.modules.learning.startModule(${module.id})" 
+                                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                    <i data-feather="play" class="w-4 h-4 mr-2"></i>
+                                    Start Learning
+                                </button>
+                                <button onclick="app.modules.learning.previewModule(${module.id})" 
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                    <i data-feather="eye" class="w-4 h-4 mr-2"></i>
+                                    Preview
+                                </button>
+                            ` : `
+                                <button onclick="app.modules.learning.reviewModule(${module.id})" 
+                                        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors">
+                                    <i data-feather="refresh-cw" class="w-4 h-4 mr-2"></i>
+                                    Review Module
+                                </button>
+                            `}
+                            <button onclick="app.modules.learning.bookmarkModule(${module.id})" 
+                                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                                <i data-feather="bookmark" class="w-4 h-4 mr-2"></i>
+                                Bookmark
+                            </button>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+
+    toggleExpanded(moduleId) {
+        if (this.expandedRows.has(moduleId)) {
+            this.expandedRows.delete(moduleId);
+        } else {
+            this.expandedRows.add(moduleId);
+        }
+        
+        // Re-render the specific module row
+        this.updateModuleRow(moduleId);
+    }
+
+    updateModuleRow(moduleId) {
+        const module = this.learningPathData.find(m => m.id === moduleId);
+        const rowIndex = this.learningPathData.findIndex(m => m.id === moduleId);
+        
+        if (module) {
+            const currentRow = document.getElementById(`row-${moduleId}`);
+            const expandedRow = document.getElementById(`expanded-${moduleId}`);
+            
+            // Update the main row
+            if (currentRow) {
+                const newRowHTML = this.renderTableRow(module, rowIndex);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newRowHTML;
+                const newRows = tempDiv.querySelectorAll('tr');
+                
+                // Replace current row
+                currentRow.outerHTML = newRows[0].outerHTML;
+                
+                // Handle expanded row
+                if (newRows.length > 1) {
+                    // Insert expanded row after the main row
+                    const updatedMainRow = document.getElementById(`row-${moduleId}`);
+                    updatedMainRow.insertAdjacentHTML('afterend', newRows[1].outerHTML);
+                } else if (expandedRow) {
+                    // Remove expanded row if it exists
+                    expandedRow.remove();
+                }
+                
+                // Re-initialize feather icons
+                feather.replace();
+            }
+        }
+    }
+
+    startModule(moduleId) {
+        const module = this.learningPathData.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`Starting "${module.moduleName}". Loading course content...`, 'success');
+            // In a real application, this would navigate to the module content
+        }
+    }
+
+    previewModule(moduleId) {
+        const module = this.learningPathData.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`Loading preview for "${module.moduleName}"...`, 'info');
+            // In a real application, this would show a preview modal or page
+        }
+    }
+
+    reviewModule(moduleId) {
+        const module = this.learningPathData.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`Opening review for "${module.moduleName}"...`, 'info');
+            // In a real application, this would open the module for review
+        }
+    }
+
+    bookmarkModule(moduleId) {
+        const module = this.learningPathData.find(m => m.id === moduleId);
+        if (module) {
+            app.showNotification(`"${module.moduleName}" added to bookmarks!`, 'success');
+            // In a real application, this would save to user's bookmarks
         }
     }
 }

@@ -267,7 +267,7 @@ button:focus,
 }
 
 .file-item .file-name {
-    font-medium;
+    font-weight: medium;
     color: var(--text-primary);
     margin-left: 0.5rem;
 }
@@ -581,5 +581,142 @@ button:focus,
     
     .lg\:pl-64 {
         padding-left: 0;
+    }
+}
+
+/* Learning Path Table Styles */
+.learning-path-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.learning-path-table tr:hover {
+    background-color: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+}
+
+.learning-path-table tr.completed {
+    background-color: #f0fdf4;
+    border-left: 4px solid #22c55e;
+}
+
+.learning-path-table tr.completed:hover {
+    background-color: #dcfce7;
+}
+
+.learning-path-table th {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-bottom: 2px solid #e2e8f0;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+}
+
+.learning-path-table td {
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: middle;
+}
+
+.expand-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.expand-icon.expanded {
+    transform: rotate(90deg);
+}
+
+.module-status-badge {
+    transition: all 0.2s ease-in-out;
+}
+
+.module-status-badge:hover {
+    transform: scale(1.05);
+}
+
+.action-button {
+    transition: all 0.2s ease-in-out;
+}
+
+.action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.expanded-content {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ai-recommendation {
+    background: linear-gradient(135deg, #fdf4ff 0%, #f3e8ff 100%);
+    border: 1px solid #d8b4fe;
+    position: relative;
+    overflow: hidden;
+}
+
+.ai-recommendation::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #8b5cf6, #a855f7, #9333ea);
+}
+
+.learning-objective {
+    transition: color 0.2s ease-in-out;
+}
+
+.learning-objective:hover {
+    color: #3b82f6;
+}
+
+.prerequisite-badge {
+    transition: all 0.2s ease-in-out;
+}
+
+.prerequisite-badge:hover {
+    background-color: #2563eb;
+    color: white;
+    transform: scale(1.05);
+}
+
+/* Responsive table enhancements */
+@media (max-width: 768px) {
+    .learning-path-table {
+        font-size: 0.875rem;
+    }
+    
+    .learning-path-table th,
+    .learning-path-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+/* Loading state for dynamic content */
+.loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
     }
 }
