@@ -135,15 +135,21 @@ class App {
 
         // Update page title
         const pageTitle = document.getElementById('page-title');
-        pageTitle.textContent = this.capitalizeFirst(sectionName);
+        const titleText = sectionName === 'assessment-panel' ? 'Assessment Panel' : this.capitalizeFirst(sectionName);
+        pageTitle.textContent = titleText;
 
         // Update browser history
         if (updateHistory) {
             history.pushState({ section: sectionName }, '', `#${sectionName}`);
         }
 
-        // Load section content
-        this.renderSection(sectionName);
+        // Handle special sections
+        if (sectionName === 'assessment-panel') {
+            this.showAssessmentPanel();
+        } else {
+            this.hideAssessmentPanel();
+            this.renderSection(sectionName);
+        }
     }
 
     renderSection(sectionName) {
@@ -223,6 +229,27 @@ class App {
             error: 'alert-circle'
         };
         return icons[type] || icons.info;
+    }
+
+    showAssessmentPanel() {
+        const contentArea = document.getElementById('content-area');
+        const assessmentPanel = document.getElementById('assessment-panel');
+        
+        contentArea.classList.add('hidden');
+        assessmentPanel.classList.remove('hidden');
+        
+        // Initialize assessment panel if needed
+        if (this.modules.assessment && typeof this.modules.assessment.initPanel === 'function') {
+            this.modules.assessment.initPanel();
+        }
+    }
+
+    hideAssessmentPanel() {
+        const contentArea = document.getElementById('content-area');
+        const assessmentPanel = document.getElementById('assessment-panel');
+        
+        contentArea.classList.remove('hidden');
+        assessmentPanel.classList.add('hidden');
     }
 
     capitalizeFirst(str) {

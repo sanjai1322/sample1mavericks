@@ -307,6 +307,339 @@ class Assessment {
         this.loadAssessmentData();
     }
 
+    initPanel() {
+        // Initialize assessment panel functionality
+        this.setupFileUpload();
+        this.populateUpcomingAssessments();
+        this.populatePastAssessments();
+        feather.replace();
+    }
+
+    setupFileUpload() {
+        const dropzone = document.getElementById('upload-dropzone');
+        const fileInput = document.getElementById('assessment-file-input');
+        const uploadedFilesList = document.getElementById('uploaded-files-list');
+        const fileItems = document.getElementById('file-items');
+
+        if (!dropzone || !fileInput) return;
+
+        // Drag and drop functionality
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            this.handleFiles(files);
+        });
+
+        // Click to upload
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            this.handleFiles(files);
+        });
+    }
+
+    handleFiles(files) {
+        const uploadedFilesList = document.getElementById('uploaded-files-list');
+        const fileItems = document.getElementById('file-items');
+        
+        if (!uploadedFilesList || !fileItems) return;
+
+        const validFiles = files.filter(file => {
+            const validTypes = ['.zip', '.json'];
+            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            
+            if (!validTypes.includes(fileExtension)) {
+                app.showNotification(`Invalid file type: ${file.name}. Only .zip and .json files are allowed.`, 'error');
+                return false;
+            }
+            
+            if (file.size > maxSize) {
+                app.showNotification(`File too large: ${file.name}. Maximum size is 10MB.`, 'error');
+                return false;
+            }
+            
+            return true;
+        });
+
+        if (validFiles.length === 0) return;
+
+        validFiles.forEach(file => {
+            this.addFileToList(file);
+        });
+
+        uploadedFilesList.classList.remove('hidden');
+        app.showNotification(`${validFiles.length} file(s) uploaded successfully!`, 'success');
+    }
+
+    addFileToList(file) {
+        const fileItems = document.getElementById('file-items');
+        if (!fileItems) return;
+
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <div class="file-info">
+                <i data-feather="file" class="w-4 h-4 text-blue-600"></i>
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">(${this.formatFileSize(file.size)})</span>
+            </div>
+            <button onclick="this.parentElement.remove()" class="remove-file">
+                <i data-feather="x" class="w-4 h-4"></i>
+            </button>
+        `;
+        
+        fileItems.appendChild(fileItem);
+        feather.replace();
+    }
+
+    formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    processTextInput() {
+        const codeTextarea = document.getElementById('code-textarea');
+        const problemLink = document.getElementById('problem-link');
+        
+        if (!codeTextarea || !problemLink) return;
+
+        const code = codeTextarea.value.trim();
+        const link = problemLink.value.trim();
+        
+        if (!code && !link) {
+            app.showNotification('Please provide either code/problem description or a problem link.', 'warning');
+            return;
+        }
+
+        // Simulate processing the input
+        app.showNotification('Assessment content processed successfully! Creating new assessment...', 'success');
+        
+        // Clear inputs after processing
+        setTimeout(() => {
+            this.clearInputs();
+        }, 1000);
+    }
+
+    clearInputs() {
+        const codeTextarea = document.getElementById('code-textarea');
+        const problemLink = document.getElementById('problem-link');
+        const fileInput = document.getElementById('assessment-file-input');
+        const uploadedFilesList = document.getElementById('uploaded-files-list');
+        const fileItems = document.getElementById('file-items');
+        
+        if (codeTextarea) codeTextarea.value = '';
+        if (problemLink) problemLink.value = '';
+        if (fileInput) fileInput.value = '';
+        if (fileItems) fileItems.innerHTML = '';
+        if (uploadedFilesList) uploadedFilesList.classList.add('hidden');
+    }
+
+    populateUpcomingAssessments() {
+        const container = document.getElementById('upcoming-assessments-list');
+        if (!container) return;
+
+        const upcomingAssessments = [
+            {
+                id: 1,
+                name: 'JavaScript Advanced Concepts',
+                date: '2024-08-12',
+                time: '14:00',
+                difficulty: 'intermediate',
+                duration: '90 minutes',
+                questions: 25
+            },
+            {
+                id: 2,
+                name: 'React State Management',
+                date: '2024-08-15',
+                time: '10:30',
+                difficulty: 'advanced',
+                duration: '120 minutes',
+                questions: 30
+            },
+            {
+                id: 3,
+                name: 'CSS Flexbox & Grid',
+                date: '2024-08-18',
+                time: '16:00',
+                difficulty: 'beginner',
+                duration: '60 minutes',
+                questions: 20
+            }
+        ];
+
+        if (upcomingAssessments.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <i data-feather="calendar" class="w-6 h-6 text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500">No upcoming assessments</p>
+                    <p class="text-sm text-gray-400">New assessments will appear here when scheduled</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = upcomingAssessments.map(assessment => `
+                <div class="assessment-item upcoming">
+                    <div class="assessment-header">
+                        <h4 class="assessment-title">${assessment.name}</h4>
+                        <span class="difficulty-badge difficulty-${assessment.difficulty}">
+                            ${this.capitalizeFirst(assessment.difficulty)}
+                        </span>
+                    </div>
+                    <div class="assessment-meta">
+                        <span><i data-feather="calendar" class="w-4 h-4 inline mr-1"></i>${App.formatDate(assessment.date)}</span>
+                        <span><i data-feather="clock" class="w-4 h-4 inline mr-1"></i>${assessment.time}</span>
+                        <span><i data-feather="timer" class="w-4 h-4 inline mr-1"></i>${assessment.duration}</span>
+                        <span><i data-feather="help-circle" class="w-4 h-4 inline mr-1"></i>${assessment.questions} questions</span>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="app.modules.assessment.viewAssessmentDetails(${assessment.id})" 
+                                class="btn-secondary text-sm px-3 py-1">
+                            View Details
+                        </button>
+                        <button onclick="app.modules.assessment.registerForAssessment(${assessment.id})" 
+                                class="btn-primary text-sm px-3 py-1">
+                            Register
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        feather.replace();
+    }
+
+    populatePastAssessments() {
+        const container = document.getElementById('past-assessments-list');
+        if (!container) return;
+
+        const pastAssessments = [
+            {
+                id: 1,
+                name: 'HTML & CSS Fundamentals',
+                completedDate: '2024-08-01',
+                score: 92,
+                duration: '45 minutes',
+                maxScore: 100,
+                status: 'Passed'
+            },
+            {
+                id: 2,
+                name: 'JavaScript Basics',
+                completedDate: '2024-07-28',
+                score: 87,
+                duration: '60 minutes',
+                maxScore: 100,
+                status: 'Passed'
+            },
+            {
+                id: 3,
+                name: 'Database Design Principles',
+                completedDate: '2024-07-25',
+                score: 76,
+                duration: '90 minutes',
+                maxScore: 100,
+                status: 'Passed'
+            },
+            {
+                id: 4,
+                name: 'Advanced Algorithms',
+                completedDate: '2024-07-20',
+                score: 64,
+                duration: '120 minutes',
+                maxScore: 100,
+                status: 'Failed'
+            }
+        ];
+
+        if (pastAssessments.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        <i data-feather="clock" class="w-6 h-6 text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500">No completed assessments</p>
+                    <p class="text-sm text-gray-400">Your completed assessments will appear here</p>
+                </div>
+            `;
+        } else {
+            container.innerHTML = pastAssessments.map(assessment => `
+                <div class="assessment-item completed">
+                    <div class="assessment-header">
+                        <h4 class="assessment-title">${assessment.name}</h4>
+                        <span class="score-badge">
+                            ${assessment.score}/${assessment.maxScore} (${Math.round((assessment.score/assessment.maxScore)*100)}%)
+                        </span>
+                    </div>
+                    <div class="assessment-meta">
+                        <span><i data-feather="calendar" class="w-4 h-4 inline mr-1"></i>Completed ${App.formatDate(assessment.completedDate)}</span>
+                        <span><i data-feather="clock" class="w-4 h-4 inline mr-1"></i>Duration: ${assessment.duration}</span>
+                        <span class="${assessment.status === 'Passed' ? 'text-green-600' : 'text-red-600'}">
+                            <i data-feather="${assessment.status === 'Passed' ? 'check-circle' : 'x-circle'}" class="w-4 h-4 inline mr-1"></i>
+                            ${assessment.status}
+                        </span>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="app.modules.assessment.viewResults(${assessment.id})" 
+                                class="btn-secondary text-sm px-3 py-1">
+                            View Results
+                        </button>
+                        <button onclick="app.modules.assessment.retakeAssessment(${assessment.id})" 
+                                class="btn-primary text-sm px-3 py-1">
+                            Retake
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        feather.replace();
+    }
+
+    // Assessment Panel specific methods
+    viewAssessmentDetails(assessmentId) {
+        app.showNotification(`Viewing details for assessment ID: ${assessmentId}`, 'info');
+    }
+
+    registerForAssessment(assessmentId) {
+        app.showNotification(`Successfully registered for assessment ID: ${assessmentId}`, 'success');
+        // Refresh the upcoming assessments list
+        setTimeout(() => {
+            this.populateUpcomingAssessments();
+        }, 1000);
+    }
+
+    viewResults(assessmentId) {
+        app.showNotification(`Viewing detailed results for assessment ID: ${assessmentId}`, 'info');
+    }
+
+    retakeAssessment(assessmentId) {
+        app.showNotification(`Starting retake for assessment ID: ${assessmentId}`, 'info');
+    }
+
+    capitalizeFirst(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
     loadAssessmentData() {
         // Load user's assessment history and available assessments
         // In a real application, this would fetch from an API
