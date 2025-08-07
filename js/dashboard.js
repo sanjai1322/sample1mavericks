@@ -48,6 +48,9 @@ class Dashboard {
                     ${this.renderLearningProgress()}
                 </div>
             </div>
+
+            <!-- Floating Button Panel -->
+            ${this.renderFloatingButtonPanel()}
         `;
     }
 
@@ -257,10 +260,89 @@ class Dashboard {
         `;
     }
 
+    renderFloatingButtonPanel() {
+        const buttons = [
+            {
+                title: 'Re-assess',
+                description: 'Start a new assessment',
+                icon: 'refresh-ccw',
+                color: 'blue',
+                action: 'reassess'
+            },
+            {
+                title: 'Update Profile',
+                description: 'Edit your profile information',
+                icon: 'user',
+                color: 'green', 
+                action: 'updateProfile'
+            },
+            {
+                title: 'Request Review',
+                description: 'Get AI feedback on your progress',
+                icon: 'message-circle',
+                color: 'purple',
+                action: 'requestReview'
+            }
+        ];
+
+        return `
+            <div class="fixed bottom-6 right-6 z-50">
+                <div class="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
+                    <div class="flex space-x-3">
+                        ${buttons.map(button => `
+                            <div class="relative group">
+                                <button onclick="dashboard.handle${button.action.charAt(0).toUpperCase() + button.action.slice(1)}()" 
+                                        class="w-12 h-12 bg-${button.color}-100 hover:bg-${button.color}-200 rounded-lg flex items-center justify-center transition-all duration-200 hover:scale-110 shadow-sm hover:shadow-md">
+                                    <i data-feather="${button.icon}" class="w-5 h-5 text-${button.color}-600"></i>
+                                </button>
+                                <!-- Tooltip -->
+                                <div class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
+                                    <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                                    ${button.title}
+                                    <div class="text-xs text-gray-300 mt-1">${button.description}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // Button click handlers
+    handleReassess() {
+        console.log('Re-assess button clicked');
+        // TODO: Trigger assessment panel
+        // For now, redirect to assessment section
+        if (typeof app !== 'undefined') {
+            app.loadSection('assessment');
+        }
+    }
+
+    handleUpdateProfile() {
+        console.log('Update Profile button clicked');
+        // TODO: Open profile form
+        // This could show a modal or redirect to profile section
+        alert('Profile update feature will be implemented soon!');
+    }
+
+    handleRequestReview() {
+        console.log('Request Review button clicked');
+        // TODO: Show popup to ask AI agent for feedback
+        const feedback = prompt('What would you like feedback on?');
+        if (feedback && feedback.trim()) {
+            console.log('Feedback request:', feedback);
+            alert('Your feedback request has been submitted: "' + feedback + '"\nAn AI agent will review your progress and provide insights.');
+        }
+    }
+
     init() {
         // Initialize any dashboard-specific functionality
         feather.replace();
         this.loadDashboardData();
+        
+        // Make dashboard instance available globally for button handlers
+        window.dashboard = this;
     }
 
     loadDashboardData() {
