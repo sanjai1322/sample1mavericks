@@ -159,28 +159,28 @@ class Analytics {
             <div class="space-y-6">
                 <!-- Overview Charts -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Revenue Chart -->
+                    <!-- Skill Performance Bar Chart -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
-                        <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                            <div class="text-center">
-                                <i data-feather="trending-up" class="w-12 h-12 text-gray-400 mx-auto mb-2"></i>
-                                <p class="text-gray-600">Revenue chart visualization</p>
-                                <p class="text-sm text-gray-500">$124,580 total revenue this month</p>
-                            </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Skill Performance Across Users</h3>
+                            <button onclick="app.modules.analytics.generateReport('skills')" class="btn-primary text-sm">
+                                <i data-feather="download" class="w-4 h-4 mr-1 inline"></i>
+                                Export
+                            </button>
                         </div>
+                        <canvas id="skillPerformanceChart" class="h-64"></canvas>
                     </div>
 
-                    <!-- User Growth Chart -->
+                    <!-- Module Completion Pie Chart -->
                     <div class="bg-white border border-gray-200 rounded-lg p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>
-                        <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                            <div class="text-center">
-                                <i data-feather="users" class="w-12 h-12 text-gray-400 mx-auto mb-2"></i>
-                                <p class="text-gray-600">User growth chart visualization</p>
-                                <p class="text-sm text-gray-500">15,420 active users (+8.2%)</p>
-                            </div>
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Module Completion Rates</h3>
+                            <button onclick="app.modules.analytics.generateReport('completion')" class="btn-primary text-sm">
+                                <i data-feather="download" class="w-4 h-4 mr-1 inline"></i>
+                                Export
+                            </button>
                         </div>
+                        <canvas id="moduleCompletionChart" class="h-64"></canvas>
                     </div>
                 </div>
 
@@ -200,6 +200,25 @@ class Analytics {
                         <div class="space-y-3">
                             ${this.renderGeographicData()}
                         </div>
+                    </div>
+                </div>
+
+                <!-- Report Generation -->
+                <div class="bg-white border border-gray-200 rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Generate Reports</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <button onclick="app.modules.analytics.generateReport('complete')" class="btn-primary flex items-center justify-center p-4">
+                            <i data-feather="file-text" class="w-5 h-5 mr-2"></i>
+                            Complete Analytics Report (JSON)
+                        </button>
+                        <button onclick="app.modules.analytics.generateCSVReport()" class="btn-secondary flex items-center justify-center p-4">
+                            <i data-feather="table" class="w-5 h-5 mr-2"></i>
+                            User Data Report (CSV)
+                        </button>
+                        <button onclick="app.modules.analytics.generatePDFReport()" class="btn-primary flex items-center justify-center p-4">
+                            <i data-feather="file" class="w-5 h-5 mr-2"></i>
+                            Visual Report (PDF)
+                        </button>
                     </div>
                 </div>
 
@@ -687,6 +706,10 @@ class Analytics {
         if (contentArea) {
             contentArea.innerHTML = this.renderAnalyticsContent();
             feather.replace();
+            // Re-initialize charts if on overview
+            if (viewId === 'overview') {
+                this.initializeCharts();
+            }
         }
         
         // Update tab styling
@@ -697,10 +720,12 @@ class Analytics {
             );
         });
         
-        event.target.className = event.target.className.replace(
-            'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-            'border-indigo-500 text-indigo-600'
-        );
+        if (event && event.target) {
+            event.target.className = event.target.className.replace(
+                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                'border-indigo-500 text-indigo-600'
+            );
+        }
     }
 
     exportReport() {
@@ -711,6 +736,8 @@ class Analytics {
         feather.replace();
         this.setupTimeRangeFilter();
         this.loadAnalyticsData();
+        // Initialize charts after a short delay to ensure DOM is ready
+        this.initializeCharts();
     }
 
     setupTimeRangeFilter() {
@@ -727,6 +754,227 @@ class Analytics {
     loadAnalyticsData() {
         // Load analytics data based on current view and time range
         // In a real application, this would fetch from an API
+    }
+
+    initializeCharts() {
+        // Initialize Skill Performance Bar Chart
+        setTimeout(() => {
+            const skillCtx = document.getElementById('skillPerformanceChart');
+            if (skillCtx) {
+                new Chart(skillCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['JavaScript', 'Python', 'React', 'Node.js', 'Data Science', 'Machine Learning', 'UI/UX Design'],
+                        datasets: [{
+                            label: 'Average Score',
+                            data: [78, 85, 72, 68, 91, 82, 75],
+                            backgroundColor: [
+                                '#3b82f6', '#ef4444', '#10b981', '#f59e0b',
+                                '#8b5cf6', '#06b6d4', '#ec4899'
+                            ],
+                            borderColor: [
+                                '#2563eb', '#dc2626', '#059669', '#d97706',
+                                '#7c3aed', '#0891b2', '#db2777'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Average User Scores by Skill'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Initialize Module Completion Pie Chart
+            const moduleCtx = document.getElementById('moduleCompletionChart');
+            if (moduleCtx) {
+                new Chart(moduleCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Completed', 'In Progress', 'Not Started'],
+                        datasets: [{
+                            data: [65, 25, 10],
+                            backgroundColor: [
+                                '#10b981',
+                                '#f59e0b', 
+                                '#ef4444'
+                            ],
+                            borderColor: [
+                                '#059669',
+                                '#d97706',
+                                '#dc2626'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Module Completion Distribution'
+                            }
+                        }
+                    }
+                });
+            }
+        }, 100);
+    }
+    
+    generateReport(type = 'complete') {
+        const reportData = {
+            timestamp: new Date().toISOString(),
+            type: type,
+            data: {}
+        };
+
+        switch (type) {
+            case 'skills':
+                reportData.data = {
+                    skillPerformance: {
+                        'JavaScript': { averageScore: 78, totalUsers: 342 },
+                        'Python': { averageScore: 85, totalUsers: 298 },
+                        'React': { averageScore: 72, totalUsers: 256 },
+                        'Node.js': { averageScore: 68, totalUsers: 189 },
+                        'Data Science': { averageScore: 91, totalUsers: 145 },
+                        'Machine Learning': { averageScore: 82, totalUsers: 123 },
+                        'UI/UX Design': { averageScore: 75, totalUsers: 167 }
+                    }
+                };
+                break;
+            case 'completion':
+                reportData.data = {
+                    moduleCompletion: {
+                        completed: 65,
+                        inProgress: 25,
+                        notStarted: 10,
+                        totalModules: 847,
+                        completedModules: 551,
+                        inProgressModules: 212,
+                        notStartedModules: 84
+                    }
+                };
+                break;
+            default:
+                reportData.data = {
+                    overview: {
+                        totalUsers: 15420,
+                        activeUsers: 8420,
+                        totalRevenue: 124580,
+                        courseCompletions: 2847,
+                        avgSessionTime: 24.5
+                    },
+                    skillPerformance: {
+                        'JavaScript': { averageScore: 78, totalUsers: 342 },
+                        'Python': { averageScore: 85, totalUsers: 298 },
+                        'React': { averageScore: 72, totalUsers: 256 },
+                        'Node.js': { averageScore: 68, totalUsers: 189 },
+                        'Data Science': { averageScore: 91, totalUsers: 145 },
+                        'Machine Learning': { averageScore: 82, totalUsers: 123 },
+                        'UI/UX Design': { averageScore: 75, totalUsers: 167 }
+                    },
+                    moduleCompletion: {
+                        completed: 65,
+                        inProgress: 25,
+                        notStarted: 10
+                    },
+                    userSegments: {
+                        activeLearners: 8420,
+                        premiumUsers: 3250,
+                        newUsers: 1890
+                    }
+                };
+        }
+
+        // Create and download JSON file
+        const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `analytics-report-${type}-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        app.showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} report generated successfully!`, 'success');
+    }
+    
+    generateCSVReport() {
+        // Generate sample user data for CSV
+        const userData = app.modules.admin.adminData.users.map(user => {
+            return {
+                Name: user.name,
+                Email: user.email,
+                Skills: user.skills.join('; '),
+                Score: user.score,
+                Status: user.status,
+                'Last Updated': user.lastUpdated,
+                'Completed Modules': user.progress.completedModules,
+                'Total Modules': user.progress.totalModules,
+                'Progress Percentage': Math.round((user.progress.completedModules / user.progress.totalModules) * 100),
+                'Streak Days': user.progress.streakDays,
+                Badges: user.progress.badges
+            };
+        });
+
+        // Convert to CSV
+        const csvContent = this.convertToCSV(userData);
+        
+        // Create and download CSV file
+        const blob = new Blob([csvContent], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `user-data-report-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        app.showNotification('CSV report generated successfully!', 'success');
+    }
+    
+    convertToCSV(data) {
+        if (!data.length) return '';
+        
+        const headers = Object.keys(data[0]);
+        const csvRows = [headers.join(',')];
+        
+        for (const row of data) {
+            const values = headers.map(header => {
+                const value = row[header];
+                return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+            });
+            csvRows.push(values.join(','));
+        }
+        
+        return csvRows.join('\n');
+    }
+    
+    generatePDFReport() {
+        // This would typically integrate with a PDF library
+        alert('PDF report generation would require a PDF library like jsPDF. For now, use the JSON or CSV reports.');
     }
 }
 

@@ -2,8 +2,15 @@
 class Admin {
     constructor() {
         this.currentView = 'dashboard';
+        this.expandedRows = new Set();
+        this.filters = {
+            search: '',
+            skill: 'all',
+            minScore: 0,
+            maxScore: 100
+        };
         this.adminData = {
-            users: [],
+            users: this.generateDummyUsers(),
             courses: [],
             hackathons: [],
             analytics: {}
@@ -248,36 +255,64 @@ class Admin {
     }
 
     renderUserManagement() {
-        const users = [
-            { id: 1, name: 'Sarah Chen', email: 'sarah@example.com', role: 'Student', status: 'Active', joined: '2024-01-15', courses: 12 },
-            { id: 2, name: 'Mike Rodriguez', email: 'mike@example.com', role: 'Instructor', status: 'Active', joined: '2024-02-20', courses: 8 },
-            { id: 3, name: 'Emily Watson', email: 'emily@example.com', role: 'Student', status: 'Inactive', joined: '2024-03-10', courses: 5 },
-            { id: 4, name: 'David Kim', email: 'david@example.com', role: 'Admin', status: 'Active', joined: '2024-01-05', courses: 15 }
-        ];
+        const filteredUsers = this.getFilteredUsers();
 
         return `
             <div class="space-y-6">
-                <!-- User Filters -->
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div class="flex space-x-4 mb-4 md:mb-0">
-                        <input type="text" placeholder="Search users..." class="form-input">
-                        <select class="form-input">
-                            <option>All Roles</option>
-                            <option>Student</option>
-                            <option>Instructor</option>
-                            <option>Admin</option>
-                        </select>
-                        <select class="form-input">
-                            <option>All Status</option>
-                            <option>Active</option>
-                            <option>Inactive</option>
-                            <option>Suspended</option>
-                        </select>
+                <!-- Search and Filters -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+                            <input type="text" 
+                                   id="user-search"
+                                   placeholder="Search by name or email..." 
+                                   class="form-input"
+                                   onkeyup="app.modules.admin.updateFilter('search', this.value)">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Skill</label>
+                            <select id="skill-filter" class="form-input" onchange="app.modules.admin.updateFilter('skill', this.value)">
+                                <option value="all">All Skills</option>
+                                <option value="JavaScript">JavaScript</option>
+                                <option value="Python">Python</option>
+                                <option value="React">React</option>
+                                <option value="Node.js">Node.js</option>
+                                <option value="Data Science">Data Science</option>
+                                <option value="Machine Learning">Machine Learning</option>
+                                <option value="UI/UX Design">UI/UX Design</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Score Range: <span id="score-display">${this.filters.minScore} - ${this.filters.maxScore}</span></label>
+                            <div class="flex items-center space-x-4">
+                                <input type="range" 
+                                       id="min-score"
+                                       min="0" max="100" 
+                                       value="${this.filters.minScore}"
+                                       class="flex-1 slider"
+                                       oninput="app.modules.admin.updateScoreRange('min', this.value)">
+                                <input type="range" 
+                                       id="max-score"
+                                       min="0" max="100" 
+                                       value="${this.filters.maxScore}"
+                                       class="flex-1 slider"
+                                       oninput="app.modules.admin.updateScoreRange('max', this.value)">
+                            </div>
+                        </div>
                     </div>
-                    <button onclick="app.modules.admin.addUser()" class="btn-primary">
-                        <i data-feather="user-plus" class="w-4 h-4 mr-2 inline"></i>
-                        Add User
-                    </button>
+                    <div class="mt-4 flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Showing ${filteredUsers.length} users</span>
+                        <div class="space-x-2">
+                            <button onclick="app.modules.admin.clearFilters()" class="btn-secondary text-sm">
+                                Clear Filters
+                            </button>
+                            <button onclick="app.modules.admin.addUser()" class="btn-primary text-sm">
+                                <i data-feather="user-plus" class="w-4 h-4 mr-2 inline"></i>
+                                Add User
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Users Table -->
@@ -285,45 +320,15 @@ class Admin {
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Courses</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Updated</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            ${users.map(user => `
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div>
-                                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
-                                            <div class="text-sm text-gray-500">${user.email}</div>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getRoleColor(user.role)}">
-                                            ${user.role}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${this.getStatusColor(user.status)}">
-                                            ${user.status}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${App.formatDate(user.joined)}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                        ${user.courses}
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                        <button onclick="app.modules.admin.editUser(${user.id})" class="text-blue-600 hover:text-blue-900">Edit</button>
-                                        <button onclick="app.modules.admin.suspendUser(${user.id})" class="text-red-600 hover:text-red-900">Suspend</button>
-                                    </td>
-                                </tr>
-                            `).join('')}
+                            ${filteredUsers.map(user => this.renderUserRow(user)).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -728,6 +733,232 @@ class Admin {
         app.showNotification('Generating system report...', 'info');
     }
 
+    generateDummyUsers() {
+        const skills = ['JavaScript', 'Python', 'React', 'Node.js', 'Data Science', 'Machine Learning', 'UI/UX Design'];
+        const names = [
+            'Sarah Chen', 'Mike Rodriguez', 'Emily Watson', 'David Kim', 'Jessica Taylor',
+            'Alex Johnson', 'Maria Garcia', 'James Wilson', 'Lisa Anderson', 'Ryan O\'Connor',
+            'Priya Patel', 'Carlos Santos', 'Nina Petrov', 'John Smith', 'Amy Liu'
+        ];
+        
+        return names.map((name, index) => {
+            const userSkills = this.getRandomSkills(skills, Math.floor(Math.random() * 3) + 2);
+            return {
+                id: index + 1,
+                name: name,
+                email: name.toLowerCase().replace(/[^a-z]/g, '') + '@example.com',
+                skills: userSkills,
+                score: Math.floor(Math.random() * 101),
+                lastUpdated: this.getRandomDate(),
+                status: Math.random() > 0.2 ? 'Active' : 'Inactive',
+                progress: {
+                    courses: Math.floor(Math.random() * 12) + 1,
+                    completedModules: Math.floor(Math.random() * 25) + 5,
+                    totalModules: Math.floor(Math.random() * 15) + 25,
+                    streakDays: Math.floor(Math.random() * 30),
+                    badges: Math.floor(Math.random() * 8)
+                }
+            };
+        });
+    }
+    
+    getRandomSkills(skills, count) {
+        const shuffled = [...skills].sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+    
+    getRandomDate() {
+        const start = new Date(2024, 0, 1);
+        const end = new Date();
+        return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toISOString().split('T')[0];
+    }
+    
+    renderUserRow(user) {
+        const isExpanded = this.expandedRows.has(user.id);
+        const progressPercentage = Math.round((user.progress.completedModules / user.progress.totalModules) * 100);
+        
+        return `
+            <tr class="hover:bg-gray-50 cursor-pointer" onclick="app.modules.admin.toggleUserRow(${user.id})">
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <i data-feather="${isExpanded ? 'chevron-down' : 'chevron-right'}" class="w-4 h-4 text-gray-400 mr-2"></i>
+                        <div>
+                            <div class="text-sm font-medium text-gray-900">${user.name}</div>
+                            <div class="text-sm text-gray-500">${user.email}</div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-6 py-4">
+                    <div class="flex flex-wrap gap-1">
+                        ${user.skills.map(skill => `
+                            <span class="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                                ${skill}
+                            </span>
+                        `).join('')}
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                        <span class="text-lg font-bold ${this.getScoreColor(user.score)}">${user.score}</span>
+                        <span class="text-sm text-gray-500 ml-1">/100</span>
+                    </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    ${this.formatDate(user.lastUpdated)}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2" onclick="event.stopPropagation()">
+                    <button onclick="app.modules.admin.editUser(${user.id})" class="text-blue-600 hover:text-blue-900">Edit</button>
+                    <button onclick="app.modules.admin.viewProfile(${user.id})" class="text-green-600 hover:text-green-900">Profile</button>
+                </td>
+            </tr>
+            ${isExpanded ? `
+                <tr class="bg-gray-50">
+                    <td colspan="5" class="px-6 py-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">Learning Progress</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between text-sm mb-1">
+                                            <span class="text-gray-600">Course Completion</span>
+                                            <span class="font-medium">${progressPercentage}%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2">
+                                            <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: ${progressPercentage}%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span class="text-gray-600">Modules: </span>
+                                            <span class="font-medium">${user.progress.completedModules}/${user.progress.totalModules}</span>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-600">Courses: </span>
+                                            <span class="font-medium">${user.progress.courses}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-3">User Metadata</h4>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Streak: </span>
+                                        <span class="font-medium text-orange-600">${user.progress.streakDays} days</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Badges: </span>
+                                        <span class="font-medium text-purple-600">${user.progress.badges}</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Status: </span>
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full ${this.getStatusColor(user.status)}">
+                                            ${user.status}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Score Trend: </span>
+                                        <span class="font-medium text-green-600">+${Math.floor(Math.random() * 10) + 1}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            ` : ''}
+        `;
+    }
+    
+    getFilteredUsers() {
+        return this.adminData.users.filter(user => {
+            const matchesSearch = !this.filters.search || 
+                user.name.toLowerCase().includes(this.filters.search.toLowerCase()) ||
+                user.email.toLowerCase().includes(this.filters.search.toLowerCase());
+            
+            const matchesSkill = this.filters.skill === 'all' || 
+                user.skills.includes(this.filters.skill);
+            
+            const matchesScore = user.score >= this.filters.minScore && user.score <= this.filters.maxScore;
+            
+            return matchesSearch && matchesSkill && matchesScore;
+        });
+    }
+    
+    updateFilter(type, value) {
+        this.filters[type] = value;
+        this.refreshUserTable();
+    }
+    
+    updateScoreRange(type, value) {
+        if (type === 'min') {
+            this.filters.minScore = parseInt(value);
+            if (this.filters.minScore > this.filters.maxScore) {
+                this.filters.maxScore = this.filters.minScore;
+                document.getElementById('max-score').value = this.filters.maxScore;
+            }
+        } else {
+            this.filters.maxScore = parseInt(value);
+            if (this.filters.maxScore < this.filters.minScore) {
+                this.filters.minScore = this.filters.maxScore;
+                document.getElementById('min-score').value = this.filters.minScore;
+            }
+        }
+        
+        document.getElementById('score-display').textContent = `${this.filters.minScore} - ${this.filters.maxScore}`;
+        this.refreshUserTable();
+    }
+    
+    clearFilters() {
+        this.filters = { search: '', skill: 'all', minScore: 0, maxScore: 100 };
+        document.getElementById('user-search').value = '';
+        document.getElementById('skill-filter').value = 'all';
+        document.getElementById('min-score').value = '0';
+        document.getElementById('max-score').value = '100';
+        document.getElementById('score-display').textContent = '0 - 100';
+        this.refreshUserTable();
+    }
+    
+    toggleUserRow(userId) {
+        if (this.expandedRows.has(userId)) {
+            this.expandedRows.delete(userId);
+        } else {
+            this.expandedRows.add(userId);
+        }
+        this.refreshUserTable();
+    }
+    
+    refreshUserTable() {
+        if (this.currentView === 'users') {
+            const content = document.querySelector('#content-area');
+            if (content) {
+                content.innerHTML = this.render();
+                feather.replace();
+            }
+        }
+    }
+    
+    getScoreColor(score) {
+        if (score >= 80) return 'text-green-600';
+        if (score >= 60) return 'text-yellow-600';
+        return 'text-red-600';
+    }
+    
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    }
+    
+    viewProfile(userId) {
+        const user = this.adminData.users.find(u => u.id === userId);
+        if (user) {
+            alert(`Viewing profile for: ${user.name}\nSkills: ${user.skills.join(', ')}\nScore: ${user.score}`);
+        }
+    }
+    
     init() {
         feather.replace();
         this.loadAdminData();
