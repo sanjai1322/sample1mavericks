@@ -59,6 +59,10 @@
                 <i data-feather="trending-up" class="w-5 h-5 mr-3"></i>
                 Progress
             </a>
+            <a href="#" data-section="progress-tracker" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50">
+                <i data-feather="activity" class="w-5 h-5 mr-3"></i>
+                Progress Tracker
+            </a>
             <a href="#" data-section="learning" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50">
                 <i data-feather="book-open" class="w-5 h-5 mr-3"></i>
                 Learning
@@ -157,6 +161,105 @@
                                 <p class="text-sm text-gray-600">Earn badges and climb leaderboards</p>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Tracker Section (Hidden by default) -->
+            <div id="progress-tracker" class="hidden space-y-6">
+                <!-- Progress Bar Container -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                        <i data-feather="trending-up" class="w-5 h-5 mr-2"></i>
+                        Learning Journey Progress
+                    </h3>
+                    
+                    <!-- Horizontal Progress Bar -->
+                    <div class="relative mb-8">
+                        <!-- Progress Line -->
+                        <div class="absolute top-6 left-0 w-full h-0.5 bg-gray-200">
+                            <div id="progress-line" class="h-full bg-blue-600 transition-all duration-500 ease-in-out" style="width: 0%;"></div>
+                        </div>
+                        
+                        <!-- Progress Nodes -->
+                        <div class="relative flex justify-between">
+                            <!-- Node 1: Profile Created -->
+                            <div class="progress-node" data-step="1" data-tooltip="Profile Created">
+                                <div class="progress-dot" id="step-1">
+                                    <i data-feather="user" class="w-4 h-4"></i>
+                                </div>
+                                <div class="progress-label">
+                                    <span class="text-sm font-medium text-gray-700">Profile Created</span>
+                                    <div class="timestamp hidden text-xs text-gray-500 mt-1" id="timestamp-1"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Node 2: Assessment Completed -->
+                            <div class="progress-node" data-step="2" data-tooltip="Assessment Completed">
+                                <div class="progress-dot" id="step-2">
+                                    <i data-feather="clipboard" class="w-4 h-4"></i>
+                                </div>
+                                <div class="progress-label">
+                                    <span class="text-sm font-medium text-gray-700">Assessment Completed</span>
+                                    <div class="timestamp hidden text-xs text-gray-500 mt-1" id="timestamp-2"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Node 3: Skills Evaluated -->
+                            <div class="progress-node" data-step="3" data-tooltip="Skills Evaluated">
+                                <div class="progress-dot" id="step-3">
+                                    <i data-feather="award" class="w-4 h-4"></i>
+                                </div>
+                                <div class="progress-label">
+                                    <span class="text-sm font-medium text-gray-700">Skills Evaluated</span>
+                                    <div class="timestamp hidden text-xs text-gray-500 mt-1" id="timestamp-3"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Node 4: Learning Path Generated -->
+                            <div class="progress-node" data-step="4" data-tooltip="Learning Path Generated">
+                                <div class="progress-dot" id="step-4">
+                                    <i data-feather="map" class="w-4 h-4"></i>
+                                </div>
+                                <div class="progress-label">
+                                    <span class="text-sm font-medium text-gray-700">Learning Path Generated</span>
+                                    <div class="timestamp hidden text-xs text-gray-500 mt-1" id="timestamp-4"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Control Buttons for Testing -->
+                    <div class="border-t border-gray-200 pt-6">
+                        <h4 class="text-lg font-medium text-gray-900 mb-4">Progress Simulation (Testing)</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <button onclick="app.modules.progress.completeStep(1)" class="btn-secondary text-sm">
+                                Complete Profile
+                            </button>
+                            <button onclick="app.modules.progress.completeStep(2)" class="btn-secondary text-sm">
+                                Complete Assessment
+                            </button>
+                            <button onclick="app.modules.progress.completeStep(3)" class="btn-secondary text-sm">
+                                Complete Evaluation
+                            </button>
+                            <button onclick="app.modules.progress.completeStep(4)" class="btn-secondary text-sm">
+                                Generate Path
+                            </button>
+                            <button onclick="app.modules.progress.resetProgress()" class="btn-primary text-sm">
+                                Reset Progress
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Details Panel -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                        <i data-feather="info" class="w-5 h-5 mr-2"></i>
+                        Current Progress Details
+                    </h3>
+                    <div id="progress-details">
+                        <!-- Progress details will be populated here -->
                     </div>
                 </div>
             </div>

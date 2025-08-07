@@ -8,6 +8,48 @@ class Progress {
             achievements: [],
             weeklyStats: []
         };
+
+        // Progress tracker state
+        this.trackerSteps = [
+            {
+                id: 1,
+                name: 'Profile Created',
+                description: 'Set up your learning profile and preferences',
+                status: 'active', // incomplete, active, completed, pending
+                completedAt: null,
+                icon: 'user',
+                estimatedTime: '5 minutes'
+            },
+            {
+                id: 2,
+                name: 'Assessment Completed',
+                description: 'Complete initial skill assessment',
+                status: 'incomplete',
+                completedAt: null,
+                icon: 'clipboard',
+                estimatedTime: '15 minutes'
+            },
+            {
+                id: 3,
+                name: 'Skills Evaluated',
+                description: 'Review and analyze your assessment results',
+                status: 'incomplete',
+                completedAt: null,
+                icon: 'award',
+                estimatedTime: '5 minutes'
+            },
+            {
+                id: 4,
+                name: 'Learning Path Generated',
+                description: 'Personalized learning path created based on your results',
+                status: 'incomplete',
+                completedAt: null,
+                icon: 'map',
+                estimatedTime: '2 minutes'
+            }
+        ];
+
+        this.currentStep = 1;
     }
 
     render() {
@@ -343,6 +385,275 @@ class Progress {
     loadProgressData() {
         // Load user's progress data
         // In a real application, this would fetch from an API
+    }
+
+    // Progress Tracker Methods
+    initTracker() {
+        // Initialize progress tracker functionality
+        this.setupEventListeners();
+        this.updateProgressDisplay();
+        this.updateProgressDetails();
+        feather.replace();
+    }
+
+    setupEventListeners() {
+        // Add click listeners to progress nodes
+        document.querySelectorAll('.progress-node').forEach(node => {
+            node.addEventListener('click', (e) => {
+                const stepNumber = parseInt(node.dataset.step);
+                this.onStepClick(stepNumber);
+            });
+
+            // Add hover listeners for timestamps
+            node.addEventListener('mouseenter', (e) => {
+                this.showTimestamp(node);
+            });
+
+            node.addEventListener('mouseleave', (e) => {
+                this.hideTimestamp(node);
+            });
+        });
+    }
+
+    onStepClick(stepNumber) {
+        const step = this.trackerSteps[stepNumber - 1];
+        if (!step) return;
+
+        if (step.status === 'completed') {
+            app.showNotification(`${step.name} was completed ${this.getRelativeTime(step.completedAt)}`, 'info');
+        } else if (step.status === 'active') {
+            app.showNotification(`${step.name} is currently in progress`, 'info');
+        } else if (stepNumber <= this.currentStep) {
+            app.showNotification(`Click the "Complete ${step.name.split(' ')[0]}" button to simulate completion`, 'warning');
+        } else {
+            app.showNotification(`${step.name} will be available after completing previous steps`, 'warning');
+        }
+    }
+
+    showTimestamp(node) {
+        const stepNumber = parseInt(node.dataset.step);
+        const timestampElement = document.getElementById(`timestamp-${stepNumber}`);
+        const step = this.trackerSteps[stepNumber - 1];
+        
+        if (timestampElement && step) {
+            if (step.status === 'completed' && step.completedAt) {
+                timestampElement.textContent = `Completed ${this.getRelativeTime(step.completedAt)}`;
+                timestampElement.classList.remove('hidden');
+            } else if (step.status === 'active') {
+                timestampElement.textContent = `In progress (${step.estimatedTime})`;
+                timestampElement.classList.remove('hidden');
+            } else if (stepNumber <= this.currentStep) {
+                timestampElement.textContent = `Ready to start (${step.estimatedTime})`;
+                timestampElement.classList.remove('hidden');
+            } else {
+                timestampElement.textContent = `Locked until previous steps complete`;
+                timestampElement.classList.remove('hidden');
+            }
+        }
+    }
+
+    hideTimestamp(node) {
+        const stepNumber = parseInt(node.dataset.step);
+        const timestampElement = document.getElementById(`timestamp-${stepNumber}`);
+        if (timestampElement) {
+            timestampElement.classList.add('hidden');
+        }
+    }
+
+    completeStep(stepNumber) {
+        if (stepNumber < 1 || stepNumber > this.trackerSteps.length) {
+            app.showNotification('Invalid step number', 'error');
+            return;
+        }
+
+        if (stepNumber > this.currentStep) {
+            app.showNotification('Please complete previous steps first', 'warning');
+            return;
+        }
+
+        const step = this.trackerSteps[stepNumber - 1];
+        if (step.status === 'completed') {
+            app.showNotification(`${step.name} is already completed`, 'info');
+            return;
+        }
+
+        // Mark step as completed
+        step.status = 'completed';
+        step.completedAt = new Date();
+
+        // Advance current step if this was the current step
+        if (stepNumber === this.currentStep && this.currentStep < this.trackerSteps.length) {
+            this.currentStep++;
+            // Set next step as active if it exists
+            if (this.currentStep <= this.trackerSteps.length) {
+                this.trackerSteps[this.currentStep - 1].status = 'active';
+            }
+        }
+
+        // Update display
+        this.updateProgressDisplay();
+        this.updateProgressDetails();
+        
+        app.showNotification(`${step.name} completed successfully!`, 'success');
+        
+        // Check if all steps are completed
+        if (this.trackerSteps.every(s => s.status === 'completed')) {
+            setTimeout(() => {
+                app.showNotification('🎉 Congratulations! Your learning journey setup is complete!', 'success');
+            }, 1000);
+        }
+
+        feather.replace();
+    }
+
+    resetProgress() {
+        // Reset all steps
+        this.trackerSteps.forEach((step, index) => {
+            step.status = index === 0 ? 'active' : 'incomplete';
+            step.completedAt = null;
+        });
+        
+        this.currentStep = 1;
+        
+        // Update display
+        this.updateProgressDisplay();
+        this.updateProgressDetails();
+        
+        app.showNotification('Progress reset successfully', 'info');
+        feather.replace();
+    }
+
+    updateProgressDisplay() {
+        const completedSteps = this.trackerSteps.filter(step => step.status === 'completed').length;
+        const progressPercentage = (completedSteps / this.trackerSteps.length) * 100;
+        
+        // Update progress line
+        const progressLine = document.getElementById('progress-line');
+        if (progressLine) {
+            progressLine.style.width = `${progressPercentage}%`;
+        }
+
+        // Update step dots
+        this.trackerSteps.forEach((step, index) => {
+            const stepElement = document.getElementById(`step-${index + 1}`);
+            if (stepElement) {
+                // Remove all status classes
+                stepElement.classList.remove('completed', 'active', 'pending');
+                
+                // Add appropriate status class
+                if (step.status === 'completed') {
+                    stepElement.classList.add('completed');
+                } else if (step.status === 'active') {
+                    stepElement.classList.add('active');
+                } else if (index + 1 === this.currentStep) {
+                    stepElement.classList.add('pending');
+                }
+            }
+        });
+    }
+
+    updateProgressDetails() {
+        const container = document.getElementById('progress-details');
+        if (!container) return;
+
+        const completedSteps = this.trackerSteps.filter(step => step.status === 'completed').length;
+        const totalSteps = this.trackerSteps.length;
+        const progressPercentage = Math.round((completedSteps / totalSteps) * 100);
+
+        container.innerHTML = `
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Overall Progress</span>
+                    <span class="text-sm font-medium text-blue-600">${completedSteps}/${totalSteps} steps completed</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-blue-600 h-3 rounded-full transition-all duration-500" style="width: ${progressPercentage}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">${progressPercentage}% complete</p>
+            </div>
+
+            <div class="space-y-3">
+                ${this.trackerSteps.map((step, index) => `
+                    <div class="progress-step-detail ${step.status}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 rounded-full border-2 ${this.getStepIconClasses(step.status)} flex items-center justify-center mr-3 mt-0.5">
+                                    <i data-feather="${step.icon}" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">${step.name}</h4>
+                                    <p class="text-sm text-gray-600 mt-1">${step.description}</p>
+                                    ${step.status === 'completed' && step.completedAt ? 
+                                        `<p class="text-xs text-gray-500 mt-1">Completed ${this.getRelativeTime(step.completedAt)}</p>` : 
+                                        step.status !== 'incomplete' ? 
+                                            `<p class="text-xs text-gray-500 mt-1">Estimated time: ${step.estimatedTime}</p>` : ''
+                                    }
+                                </div>
+                            </div>
+                            <span class="step-status-badge status-${step.status}">
+                                ${this.getStatusText(step.status)}
+                            </span>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+
+            ${completedSteps === totalSteps ? `
+                <div class="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <div class="flex items-center">
+                        <i data-feather="check-circle" class="w-5 h-5 text-green-600 mr-2"></i>
+                        <div>
+                            <h4 class="font-medium text-green-900">Journey Complete!</h4>
+                            <p class="text-sm text-green-700">You've successfully completed your learning journey setup. You're ready to start learning!</p>
+                        </div>
+                    </div>
+                </div>
+            ` : ''}
+        `;
+    }
+
+    getStepIconClasses(status) {
+        switch (status) {
+            case 'completed':
+                return 'border-green-500 bg-green-500 text-white';
+            case 'active':
+                return 'border-blue-500 bg-blue-500 text-white';
+            case 'pending':
+                return 'border-amber-500 bg-amber-500 text-white';
+            default:
+                return 'border-gray-300 bg-gray-100 text-gray-400';
+        }
+    }
+
+    getStatusText(status) {
+        switch (status) {
+            case 'completed':
+                return 'Completed';
+            case 'active':
+                return 'In Progress';
+            case 'pending':
+                return 'Ready';
+            default:
+                return 'Pending';
+        }
+    }
+
+    getRelativeTime(date) {
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return `${diffInSeconds} seconds ago`;
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
     }
 }
 

@@ -146,8 +146,10 @@ class App {
         // Handle special sections
         if (sectionName === 'assessment-panel') {
             this.showAssessmentPanel();
+        } else if (sectionName === 'progress-tracker') {
+            this.showProgressTracker();
         } else {
-            this.hideAssessmentPanel();
+            this.hideSpecialSections();
             this.renderSection(sectionName);
         }
     }
@@ -232,10 +234,8 @@ class App {
     }
 
     showAssessmentPanel() {
-        const contentArea = document.getElementById('content-area');
+        this.hideSpecialSections();
         const assessmentPanel = document.getElementById('assessment-panel');
-        
-        contentArea.classList.add('hidden');
         assessmentPanel.classList.remove('hidden');
         
         // Initialize assessment panel if needed
@@ -244,12 +244,25 @@ class App {
         }
     }
 
-    hideAssessmentPanel() {
+    showProgressTracker() {
+        this.hideSpecialSections();
+        const progressTracker = document.getElementById('progress-tracker');
+        progressTracker.classList.remove('hidden');
+        
+        // Initialize progress tracker if needed
+        if (this.modules.progress && typeof this.modules.progress.initTracker === 'function') {
+            this.modules.progress.initTracker();
+        }
+    }
+
+    hideSpecialSections() {
         const contentArea = document.getElementById('content-area');
         const assessmentPanel = document.getElementById('assessment-panel');
+        const progressTracker = document.getElementById('progress-tracker');
         
         contentArea.classList.remove('hidden');
         assessmentPanel.classList.add('hidden');
+        progressTracker.classList.add('hidden');
     }
 
     capitalizeFirst(str) {
